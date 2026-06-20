@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carly & Roberto | 12 Desember 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,600&family=Dancing+Script:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Cormorant Garamond',serif;background:#F5F0E8;color:#2C2C2C;overflow-x:hidden;}
+:root{
+  --olive:#3E4D35;--olive2:#506044;
+  --cream:#F5F0E8;--cream2:#EDE5D4;
+  --gold:#A8782A;--blush:#E8B4B8;
+  --text:#2C2C2C;--muted:#6B6455;
+}
+input[type=file]{display:none;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(62,77,53,0.97);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;gap:2rem;padding:0.85rem 2rem;flex-wrap:wrap;}
+nav a{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(245,240,232,0.7);text-decoration:none;transition:color 0.2s;}
+nav a:hover{color:#A8782A;}
+.nav-cr{font-family:'Dancing Script',cursive;font-size:1.2rem;color:#A8782A;}
+
+/* ADMIN TOOLBAR — shown when logged in */
+#admin-bar{display:none;position:fixed;top:44px;left:0;right:0;z-index:998;background:#1a2415;border-bottom:2px solid var(--gold);padding:0.5rem 1.5rem;align-items:center;gap:1rem;flex-wrap:wrap;}
+#admin-bar.show{display:flex;}
+.abar-label{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);}
+.abar-btn{font-family:'Lato',sans-serif;font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.3rem 0.8rem;border:1px solid rgba(168,120,42,0.5);background:transparent;color:rgba(245,240,232,0.7);cursor:pointer;transition:all 0.2s;}
+.abar-btn:hover,.abar-btn.active{background:var(--gold);color:#1a2415;border-color:var(--gold);}
+.abar-sep{width:1px;height:18px;background:rgba(255,255,255,0.15);}
+
+/* EDITABLE elements in admin mode */
+body.admin-mode [data-editable]{position:relative;outline:1px dashed rgba(168,120,42,0.5);cursor:text;}
+body.admin-mode [data-editable]:hover{outline:2px solid var(--gold);background:rgba(168,120,42,0.06);}
+body.admin-mode [data-editable]:focus{outline:2px solid var(--gold);background:rgba(168,120,42,0.1);}
+
+/* HIDE MODE — controlled via side panel, sections fully removed */
+.sec-hidden{display:none!important;}
+.sec-hide-btn{display:none;} /* old buttons hidden, replaced by panel */
+/* Visibility side panel */
+#vis-panel{display:none;position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:9990;background:#1a2415;border:1px solid var(--gold);border-right:none;padding:1.2rem 1rem;width:210px;box-shadow:-4px 0 20px rgba(0,0,0,0.4);max-height:80vh;overflow-y:auto;}
+#vis-panel.show{display:block;}
+#vis-panel h4{font-family:'Lato',sans-serif;font-size:0.56rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid rgba(168,120,42,0.3);}
+.vis-row{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-bottom:0.55rem;}
+.vis-lbl{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.08em;color:rgba(245,240,232,0.75);}
+.tog{position:relative;width:34px;height:18px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;position:absolute;}
+.tog-sl{position:absolute;inset:0;background:#444;border-radius:18px;cursor:pointer;transition:background 0.2s;}
+.tog-sl::before{content:'';position:absolute;height:12px;width:12px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform 0.2s;}
+.tog input:checked+.tog-sl{background:var(--gold);}
+.tog input:checked+.tog-sl::before{transform:translateX(16px);}
+/* Photo strip sections */
+.photo-strip{background:var(--cream2);display:grid;gap:0;}
+.photo-strip-3{grid-template-columns:1fr 1fr 1fr;}
+.photo-strip-2{grid-template-columns:1fr 1fr;}
+.pstrip-slot{aspect-ratio:1/1;overflow:hidden;position:relative;cursor:pointer;background:#e0d8cc;display:flex;align-items:center;justify-content:center;}
+.pstrip-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transition:transform 0.4s;}
+.pstrip-slot:hover img{transform:scale(1.04);}
+.pstrip-slot .pph{font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#bbb;text-align:center;padding:1rem;position:relative;z-index:1;}
+
+/* FONT TOOLBAR popup */
+#font-toolbar{display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #D5CDBE;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:0.6rem 0.8rem;gap:0.5rem;align-items:center;flex-wrap:wrap;border-radius:2px;}
+#font-toolbar.show{display:flex;}
+#font-toolbar select,#font-toolbar input{padding:0.25rem 0.4rem;border:1px solid #D5CDBE;font-size:0.75rem;background:#fff;cursor:pointer;}
+#font-toolbar input[type=number]{width:56px;}
+#font-toolbar button{padding:0.25rem 0.5rem;border:1px solid #D5CDBE;background:#fff;cursor:pointer;font-size:0.75rem;}
+#font-toolbar button:hover{background:var(--gold);color:#fff;border-color:var(--gold);}
+#font-toolbar .ft-close{margin-left:0.3rem;color:#aaa;font-size:0.9rem;}
+
+/* ═══ 1. HERO ═══ */
+#s1{height:100vh;min-height:580px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#3E4D35;}
+#s1-bg{position:absolute;inset:0;background:linear-gradient(160deg,#2a3522 0%,#3E4D35 50%,#506044 100%);}
+#s1-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;display:none;}
+#s1-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.4) 100%);}
+#s1-content{position:relative;z-index:2;text-align:center;padding:2rem;}
+.s1-tag{font-family:'Lato',sans-serif;font-size:0.62rem;letter-spacing:0.45em;text-transform:uppercase;color:rgba(245,240,232,0.65);margin-bottom:1.5rem;display:block;}
+.s1-name{font-family:'Playfair Display',serif;font-weight:300;text-transform:uppercase;font-size:clamp(3.5rem,12vw,9rem);line-height:0.9;color:#F5F0E8;letter-spacing:0.12em;display:block;}
+.s1-and{font-family:'Dancing Script',cursive;font-size:clamp(2rem,5vw,4rem);color:#A8782A;display:block;margin:0.5rem 0;letter-spacing:0.05em;}
+.s1-sub{font-family:'Lato',sans-serif;font-size:0.68rem;letter-spacing:0.5em;text-transform:uppercase;color:rgba(245,240,232,0.7);margin-top:2rem;display:block;}
+
+/* ═══ 2. PHOTO + DATE ═══ */
+#s2{background:var(--cream);display:grid;grid-template-columns:1fr 1fr;min-height:75vh;}
+.s2-left{padding:5rem 3rem 5rem 5rem;display:flex;align-items:center;justify-content:flex-end;}
+.s2-photo-frame{width:min(340px,100%);aspect-ratio:3/4;border:1px solid #2C2C2C;padding:8px;cursor:pointer;position:relative;overflow:hidden;background:var(--cream2);display:flex;align-items:center;justify-content:center;}
+.s2-photo-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.s2-photo-ph{font-family:'Lato',sans-serif;font-size:0.68rem;letter-spacing:0.12em;color:#aaa;text-align:center;padding:2rem;}
+.s2-right{padding:5rem 5rem 5rem 4rem;display:flex;flex-direction:column;justify-content:center;}
+.s2-script{font-family:'Dancing Script',cursive;font-size:clamp(2.8rem,5vw,4.5rem);color:var(--olive);line-height:1.15;margin-bottom:0.8rem;}
+.s2-at{font-family:'Lato',sans-serif;font-size:0.62rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;}
+.s2-venue{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.8rem);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text);}
+.s2-divider{width:50px;height:1px;background:var(--gold);margin:2rem 0;}
+.s2-body{font-size:1.05rem;line-height:1.9;color:var(--muted);}
+
+/* ═══ 3. SPECIAL DAY ═══ */
+#s3{background:var(--olive);padding:7rem 2rem;text-align:center;position:relative;overflow:hidden;}
+#s3-bg{position:absolute;inset:0;background:linear-gradient(160deg,#2a3522 0%,#3E4D35 60%,#506044 100%);}
+#s3-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.35;display:none;}
+#s3-overlay{position:absolute;inset:0;background:rgba(30,40,20,0.55);}
+#s3-content{position:relative;z-index:2;}
+.s3-stripe{position:absolute;top:0;bottom:0;width:36px;display:flex;flex-direction:column;z-index:3;}
+.s3-stripe-l{left:0;}.s3-stripe-r{right:0;}
+.s3-stripe span{flex:1;display:block;}
+.s3-stripe span:nth-child(odd){background:rgba(255,255,255,0.04);}
+.s3-script{font-family:'Dancing Script',cursive;font-size:clamp(2.5rem,5vw,4rem);color:#F5F0E8;margin-bottom:2.5rem;}
+.s3-body{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2vw,1.22rem);line-height:2.1;color:rgba(245,240,232,0.88);max-width:620px;margin:0 auto 2.5rem;}
+.s3-sig{font-family:'Dancing Script',cursive;font-size:2rem;color:#A8782A;}
+
+/* ═══ 4. THE DAY — elegant SVG icons ═══ */
+#s4{background:var(--cream);padding:7rem 2rem;text-align:center;}
+.s4-title{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(2.2rem,5vw,4.5rem);text-transform:uppercase;letter-spacing:0.12em;color:var(--text);margin-bottom:0.5rem;}
+.s4-sub{font-family:'Dancing Script',cursive;font-size:1.5rem;color:var(--muted);margin-bottom:3rem;}
+.s4-rule{width:1px;height:40px;background:var(--gold);margin:0 auto 3rem;}
+.s4-icons{display:flex;justify-content:center;gap:0;flex-wrap:wrap;max-width:960px;margin:0 auto;border-top:1px solid var(--cream2);border-bottom:1px solid var(--cream2);}
+.s4-item{flex:1;min-width:130px;padding:2.8rem 1rem;border-right:1px solid var(--cream2);text-align:center;}
+.s4-item:last-child{border-right:none;}
+.s4-ico{width:40px;height:40px;margin:0 auto 1.2rem;opacity:0.75;}
+.s4-ico svg{width:100%;height:100%;}
+.s4-time{font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;color:var(--olive);margin-bottom:0.4rem;}
+.s4-label{font-family:'Lato',sans-serif;font-size:0.56rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);}
+
+/* ═══ FULLSCREEN PHOTO BREAK ═══ */
+#sfull{height:100vh;min-height:500px;position:relative;overflow:hidden;background:#1e2a18;}
+#sfull-bg{position:absolute;inset:0;}
+#sfull-bg img{width:100%;height:100%;object-fit:cover;display:none;}
+#sfull-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08),rgba(0,0,0,0.25));}
+.sfull-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;opacity:0.25;}
+.sfull-placeholder p{font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:#F5F0E8;}
+
+/* ═══ DRESS CODE OWN SECTION ═══ */
+#sdress{background:var(--cream2);padding:7rem 3rem;}
+.sdress-inner{max-width:1000px;margin:0 auto;}
+.sdress-top{display:grid;grid-template-columns:1fr 1fr;gap:5rem;margin-bottom:4rem;align-items:start;}
+.sdress-heading{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(2rem,4vw,3.5rem);text-transform:uppercase;letter-spacing:0.1em;color:var(--text);margin-bottom:0.3rem;}
+.sdress-sub{font-family:'Dancing Script',cursive;font-size:1.8rem;color:var(--olive);margin-bottom:2rem;}
+.sdress-rule{margin-bottom:1.5rem;}
+.sdress-rule-lbl{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;}
+.sdress-rule-txt{font-size:1.05rem;line-height:1.9;color:var(--muted);}
+.sdress-note{margin-top:2rem;font-size:1rem;line-height:1.9;color:var(--muted);font-style:italic;border-left:3px solid var(--gold);padding-left:1.2rem;}
+.sdress-palette-title{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;}
+.sdress-swatches{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem;}
+.swatch{display:flex;flex-direction:column;align-items:center;gap:0.5rem;}
+.swatch-circle{width:54px;height:54px;border-radius:50%;border:2px solid rgba(0,0,0,0.06);box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+.swatch-label{font-family:'Lato',sans-serif;font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);text-align:center;max-width:60px;}
+.sdress-tags{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1.5rem;}
+.sdress-tag{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.35rem 0.9rem;}
+.sdress-tag-yes{border:1px solid var(--olive);color:var(--olive);}
+.sdress-tag-no{border:1px solid #bba070;color:#bba070;text-decoration:line-through;opacity:0.6;}
+.sdress-photos{display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-top:0;}
+.sdress-slot{aspect-ratio:3/4;background:var(--cream);border:1px dashed #C5BDB0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color 0.2s;}
+.sdress-slot:hover{border-color:var(--gold);}
+.sdress-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.sdress-slot .dph{font-size:0.62rem;color:#bbb;text-align:center;font-family:'Lato',sans-serif;letter-spacing:0.07em;padding:0.8rem;position:relative;z-index:1;}
+@media(max-width:700px){.sdress-top{grid-template-columns:1fr;gap:2rem;}.sdress-photos{grid-template-columns:1fr 1fr;}}
+
+/* ═══ 7. MENU — warm editorial ═══ */
+#s7{background:var(--olive);padding:6rem 3rem 7rem;}
+.s7-inner{max-width:860px;margin:0 auto;}
+.s7-header{text-align:center;margin-bottom:4rem;}
+.s7-title{font-family:'Playfair Display',serif;font-weight:300;font-size:clamp(2.5rem,6vw,5rem);letter-spacing:0.08em;color:#F5F0E8;margin-bottom:0.3rem;}
+.s7-sub{font-family:'Dancing Script',cursive;font-size:2rem;color:var(--gold);}
+.s7-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem auto;max-width:320px;}
+.s7-divider::before,.s7-divider::after{content:'';flex:1;height:1px;background:rgba(168,120,42,0.35);}
+.s7-divider span{font-family:'Dancing Script',cursive;color:var(--gold);font-size:1.2rem;white-space:nowrap;}
+
+/* Category label — full width centred */
+.s7-cat-heading{
+  text-align:center;margin:3rem 0 1.8rem;
+  font-family:'Lato',sans-serif;font-size:0.55rem;letter-spacing:0.35em;
+  text-transform:uppercase;color:rgba(168,120,42,0.7);
+  display:flex;align-items:center;gap:1rem;
+}
+.s7-cat-heading::before,.s7-cat-heading::after{content:'';flex:1;height:1px;background:rgba(168,120,42,0.2);}
+
+/* Dishes in a relaxed two-column flow */
+.s7-dishes{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+}
+.s7-dish{
+  padding:1.4rem 1.8rem;
+  border-bottom:1px solid rgba(168,120,42,0.1);
+  position:relative;
+}
+.s7-dish:nth-child(odd){border-right:1px solid rgba(168,120,42,0.1);}
+.s7-dish-name{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:1.2rem;color:#F5F0E8;margin-bottom:0.3rem;font-weight:400;
+}
+.s7-dish-desc{font-family:'Lato',sans-serif;font-size:0.65rem;letter-spacing:0.06em;color:rgba(245,240,232,0.45);line-height:1.6;}
+.s7-dish-single{grid-column:1/-1;padding:1.4rem 1.8rem;border-bottom:1px solid rgba(168,120,42,0.1);text-align:center;}
+
+/* Cake centrepiece */
+.s7-cake{
+  text-align:center;margin:4rem auto 0;max-width:420px;
+  padding:2.5rem 2rem;
+  position:relative;
+}
+.s7-cake::before{
+  content:'';position:absolute;inset:0;
+  border:1px solid rgba(168,120,42,0.3);
+  transform:rotate(0.5deg);
+}
+.s7-cake::after{
+  content:'';position:absolute;inset:0;
+  border:1px solid rgba(168,120,42,0.15);
+  transform:rotate(-0.5deg);
+}
+.s7-cake-eyebrow{font-family:'Lato',sans-serif;font-size:0.52rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(168,120,42,0.6);margin-bottom:0.7rem;}
+.s7-cake-script{font-family:'Dancing Script',cursive;font-size:2.2rem;color:var(--gold);margin-bottom:0.4rem;position:relative;z-index:1;}
+.s7-cake-sub{font-size:0.9rem;color:rgba(245,240,232,0.45);font-style:italic;position:relative;z-index:1;}
+
+/* ═══ SCROLL REVEAL ═══ */
+.reveal{
+  opacity:0;
+  transform:translateY(40px);
+  transition:opacity 0.85s cubic-bezier(0.22,1,0.36,1), transform 0.85s cubic-bezier(0.22,1,0.36,1);
+}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:0.1s;}
+.reveal-delay-2{transition-delay:0.2s;}
+.reveal-delay-3{transition-delay:0.32s;}
+.reveal-delay-4{transition-delay:0.44s;}
+.reveal-delay-5{transition-delay:0.56s;}
+
+/* ═══ 8. GIFTS + DRESS CODE ═══ */
+#s8{background:var(--cream);padding:7rem 3rem;}
+.s8-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;}
+.s8-gifts-title{font-family:'Dancing Script',cursive;font-size:3rem;color:var(--text);margin-bottom:1rem;}
+.s8-gifts-box{border:1px solid #2C2C2C;padding:2.5rem;position:relative;}
+.s8-gifts-intro{font-size:1rem;line-height:1.9;color:var(--muted);margin-bottom:1.8rem;}
+.s8-gift-item{display:flex;align-items:center;gap:0.8rem;margin-bottom:0.9rem;font-size:0.95rem;color:var(--text);}
+.s8-gift-item::before{content:'—';color:var(--gold);flex-shrink:0;}
+.s8-dress-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text);margin-bottom:0.5rem;}
+.s8-dress-sub{font-family:'Dancing Script',cursive;font-size:1.4rem;color:var(--olive);margin-bottom:1.5rem;}
+.s8-dress-block{margin-bottom:1.5rem;}
+.s8-dress-lbl{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;}
+.s8-dress-txt{font-size:1rem;line-height:1.8;color:var(--muted);}
+.dress-photos{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:1.2rem;}
+.dress-slot{aspect-ratio:3/4;background:var(--cream2);border:1px dashed #C5BDB0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color 0.2s;}
+.dress-slot:hover{border-color:var(--gold);}
+.dress-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.dress-slot .dph{font-size:0.65rem;color:#bbb;text-align:center;font-family:'Lato',sans-serif;letter-spacing:0.08em;padding:1rem;position:relative;z-index:1;}
+
+/* ═══ 5. RSVP — moved near end ═══ */
+#s5{display:grid;grid-template-columns:1fr 1fr;min-height:85vh;background:var(--cream2);}
+.s5-photo{position:relative;overflow:hidden;background:var(--cream2);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.s5-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.s5-photo-ph{font-family:'Lato',sans-serif;font-size:0.68rem;letter-spacing:0.12em;color:#aaa;text-align:center;padding:2rem;position:relative;z-index:1;}
+.s5-form{background:var(--olive);padding:5rem 4rem;display:flex;flex-direction:column;justify-content:center;}
+.s5-title{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(2.5rem,5vw,4rem);color:#F5F0E8;margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;}
+.s5-body{font-size:1.05rem;line-height:2;color:rgba(245,240,232,0.65);margin-bottom:1.5rem;}
+.s5-deadline{font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(168,120,42,0.4);display:inline-block;padding:0.5rem 1.1rem;margin-bottom:2rem;}
+.flabel{display:block;font-family:'Lato',sans-serif;font-size:0.56rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(245,240,232,0.55);margin-bottom:0.4rem;}
+.finput,.ftextarea{width:100%;padding:0.75rem 0.9rem;margin-bottom:1rem;border:1px solid rgba(245,240,232,0.15);background:rgba(255,255,255,0.07);font-family:'Cormorant Garamond',serif;font-size:1rem;color:#F5F0E8;outline:none;transition:border-color 0.2s;}
+.finput:focus,.ftextarea:focus{border-color:var(--gold);}
+.finput::placeholder,.ftextarea::placeholder{color:rgba(245,240,232,0.25);}
+.ftextarea{resize:vertical;}
+.rsvp-radios{display:flex;gap:0.6rem;margin-bottom:1rem;}
+.rsvp-radio{flex:1;padding:0.75rem;text-align:center;cursor:pointer;border:1px solid rgba(245,240,232,0.2);font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(245,240,232,0.65);transition:all 0.2s;}
+.rsvp-radio.on{border-color:var(--gold);background:var(--gold);color:#2C2C2C;font-weight:600;}
+.plusone-box{border-left:2px solid var(--gold);padding-left:1rem;margin-bottom:1rem;display:none;}
+.plusone-box.show{display:block;}
+.btn-submit{width:100%;padding:1rem;background:var(--gold);color:#2C2C2C;border:none;cursor:pointer;font-family:'Lato',sans-serif;font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;transition:opacity 0.2s;margin-top:0.3rem;}
+.btn-submit:hover{opacity:0.85;}
+.rsvp-thanks{display:none;text-align:center;padding:3rem 0;}
+.rsvp-thanks h3{font-family:'Dancing Script',cursive;font-size:2.5rem;color:var(--gold);margin-bottom:0.8rem;}
+.rsvp-thanks p{font-size:1.05rem;color:rgba(245,240,232,0.7);line-height:1.8;}
+/* dropdown */
+#name-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #D5CDBE;border-top:none;z-index:50;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.dd-item{padding:0.75rem 1rem;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1rem;color:#2C2C2C;border-bottom:1px solid #EDE5D4;transition:background 0.15s;}
+.dd-item:hover{background:#F5F0E8;}
+.dd-plus{float:right;font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.1em;color:#A8782A;text-transform:uppercase;}
+
+/* ═══ 6. OTHER DETAILS — below RSVP ═══ */
+#s6{background:var(--cream2);padding:7rem 4rem;}
+.s6-title{font-family:'Dancing Script',cursive;font-size:clamp(2.5rem,5vw,4rem);color:var(--text);text-align:center;margin-bottom:3.5rem;}
+.s6-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:3rem;max-width:900px;margin:0 auto;}
+.s6-block-label{font-family:'Lato',sans-serif;font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:0.8rem;padding-bottom:0.6rem;border-bottom:1px solid #D5CDBE;}
+.s6-block-text{font-size:1rem;line-height:1.85;color:var(--muted);}
+
+/* ═══ 9. SIGN-OFF ═══ */
+#s9{background:var(--olive);padding:7rem 2rem;text-align:center;}
+.s9-body{font-size:clamp(1rem,2vw,1.2rem);color:rgba(245,240,232,0.75);line-height:2;max-width:580px;margin:0 auto 2.5rem;}
+.s9-love{font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.6rem;}
+.s9-sig{font-family:'Dancing Script',cursive;font-size:2.8rem;color:var(--gold);}
+
+/* FOOTER */
+footer{background:#1E2519;text-align:center;padding:2.5rem;font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(245,240,232,0.3);}
+
+/* ADMIN MODAL */
+#admin-btn{display:none;}
+.overlay{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+.modal{background:var(--cream);max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:2.5rem;border-top:3px solid var(--gold);position:relative;}
+.modal-x{position:absolute;top:1rem;right:1.2rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);}
+.modal h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--olive);margin-bottom:0.3rem;}
+.msub{font-size:0.88rem;color:var(--muted);margin-bottom:1.8rem;}
+.asec{margin-bottom:1.8rem;padding-bottom:1.8rem;border-bottom:1px solid var(--cream2);}
+.asec h3{font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.8rem;}
+.aedit{width:100%;padding:0.6rem 0.8rem;border:1px solid #D5CDBE;background:#fff;font-family:'Cormorant Garamond',serif;font-size:0.95rem;margin-bottom:0.5rem;resize:vertical;}
+.abtn{padding:0.5rem 1.1rem;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;border:none;cursor:pointer;font-family:'Lato',sans-serif;margin-right:0.4rem;}
+.ab-o{background:var(--olive);color:#fff;}.ab-g{background:var(--gold);color:#fff;}.ab-r{background:#a33;color:#fff;}
+.gbox{max-height:200px;overflow-y:auto;border:1px solid var(--cream2);margin-top:0.6rem;}
+.grow{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.7rem;border-bottom:1px solid var(--cream2);font-size:0.85rem;}
+.grow:last-child{border-bottom:none;}
+.gn{flex:1;font-weight:600;color:var(--olive);}.gp{font-size:0.78rem;color:var(--muted);}
+.gdel{background:none;border:none;cursor:pointer;color:#ccc;}.gdel:hover{color:#a33;}
+.rtbl{width:100%;border-collapse:collapse;font-size:0.8rem;margin-top:0.6rem;}
+.rtbl th{font-family:'Lato',sans-serif;font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);padding:0.5rem;background:var(--cream2);text-align:left;}
+.rtbl td{padding:0.5rem;border-bottom:1px solid var(--cream2);vertical-align:top;}
+.bdg{display:inline-block;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.65rem;font-family:'Lato',sans-serif;}
+.by{background:#d4edda;color:#2d6a4f;}.bn{background:#fde8e8;color:#9b2226;}
+#apwf{display:block;}#apanel{display:none;}
+
+/* RESPONSIVE */
+@media(max-width:750px){
+  #s2,#s5{grid-template-columns:1fr;}
+  .s2-left{padding:4rem 2rem 2rem;justify-content:center;}
+  .s2-right{padding:2rem 2rem 4rem;}
+  .s5-photo{min-height:280px;}
+  .s5-form{padding:3rem 2rem;}
+  .s8-inner{grid-template-columns:1fr;gap:3rem;}
+  .s7-grid{grid-template-columns:1fr;}
+  nav{gap:1rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#s1">Tuis</a>
+  <a href="#s2">Ons Dag</a>
+  <a href="#s3">Spesiale Dag</a>
+  <span class="nav-cr" onclick="openAdminLogin()" title="" style="cursor:default;user-select:none;">C & R</span>
+  <a href="#s4">Program</a>
+  <a href="#s7">Spyskaart</a>
+  <a href="#sdress">Dress Code</a>
+  <a href="#s8">Geskenke</a>
+  <a href="#s5">RSVP</a>
+  <a href="#s6">Ander</a>
+</nav>
+
+<!-- ADMIN TOOLBAR (visible when logged in) -->
+<div id="admin-bar">
+  <span class="abar-label">⚙ Admin Modus</span>
+  <div class="abar-sep"></div>
+  <button class="abar-btn active" id="btn-edit-mode" onclick="toggleEditMode()">✏️ Wysig Teks Aan</button>
+  <button class="abar-btn" id="btn-hide-mode" onclick="toggleHideMode()">👁 Wys/Versteek Seksies</button>
+  <button class="abar-btn" onclick="openAdminModal()">📋 Gastelys & RSVP</button>
+  <button class="abar-btn" onclick="doLogout()">Teken Uit</button>
+</div>
+
+<!-- VISIBILITY SIDE PANEL -->
+<div id="vis-panel">
+  <h4>👁 Seksies Wys/Versteek</h4>
+  <div class="vis-row"><span class="vis-lbl">Hero</span><label class="tog"><input type="checkbox" checked data-secid="s1" onchange="toggleSec('s1',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Ons Dag</span><label class="tog"><input type="checkbox" checked data-secid="s2" onchange="toggleSec('s2',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Foto Strip A</span><label class="tog"><input type="checkbox" checked data-secid="psa" onchange="toggleSec('psa',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Spesiale Dag</span><label class="tog"><input type="checkbox" checked data-secid="s3" onchange="toggleSec('s3',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Program</span><label class="tog"><input type="checkbox" checked data-secid="s4" onchange="toggleSec('s4',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Volskerm Foto</span><label class="tog"><input type="checkbox" checked data-secid="sfull" onchange="toggleSec('sfull',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Spyskaart</span><label class="tog"><input type="checkbox" checked data-secid="s7" onchange="toggleSec('s7',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Foto Strip B</span><label class="tog"><input type="checkbox" checked data-secid="psb" onchange="toggleSec('psb',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Geskenke</span><label class="tog"><input type="checkbox" checked data-secid="s8" onchange="toggleSec('s8',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Dress Code</span><label class="tog"><input type="checkbox" checked data-secid="sdress" onchange="toggleSec('sdress',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Foto Strip C</span><label class="tog"><input type="checkbox" checked data-secid="psc" onchange="toggleSec('psc',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">RSVP</span><label class="tog"><input type="checkbox" checked data-secid="s5" onchange="toggleSec('s5',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Ander</span><label class="tog"><input type="checkbox" checked data-secid="s6" onchange="toggleSec('s6',this)"><span class="tog-sl"></span></label></div>
+  <div class="vis-row"><span class="vis-lbl">Afsluiting</span><label class="tog"><input type="checkbox" checked data-secid="s9" onchange="toggleSec('s9',this)"><span class="tog-sl"></span></label></div>
+</div>
+
+<!-- FONT TOOLBAR (floats near selection) -->
+<div id="font-toolbar">
+  <span style="font-size:0.7rem;color:var(--muted);font-family:'Lato',sans-serif;letter-spacing:0.1em;">FONT:</span>
+  <select id="ft-family" onchange="applyFont()">
+    <option value="">— familie —</option>
+    <option value="'Playfair Display',serif">Playfair Display</option>
+    <option value="'Dancing Script',cursive">Dancing Script</option>
+    <option value="'Cormorant Garamond',serif">Cormorant Garamond</option>
+    <option value="'Lato',sans-serif">Lato</option>
+  </select>
+  <input type="number" id="ft-size" placeholder="rem" min="0.5" max="10" step="0.1" onchange="applyFont()" style="width:60px;">
+  <button onclick="applyBold()" title="Vet">B</button>
+  <button onclick="applyItalic()" title="Kursief"><em>I</em></button>
+  <select id="ft-color" onchange="applyFont()">
+    <option value="">— kleur —</option>
+    <option value="#3E4D35">Olyf</option>
+    <option value="#A8782A">Goud</option>
+    <option value="#F5F0E8">Room</option>
+    <option value="#2C2C2C">Donker</option>
+    <option value="#6B6455">Gedempte</option>
+    <option value="#E8B4B8">Bloos</option>
+  </select>
+  <button class="ft-close" onclick="document.getElementById('font-toolbar').classList.remove('show')">✕</button>
+</div>
+
+<!-- ═══ 1. HERO ═══ -->
+<section id="s1">
+  <button class="sec-hide-btn" onclick="toggleSection('s1')">👁 Versteek</button>
+  <div id="s1-bg">
+    <img id="hero-bg" src="" alt="">
+  </div>
+  <div id="s1-overlay"></div>
+  <div id="s1-content">
+    <span class="s1-tag" data-key="s1_tag" data-editable contenteditable="false">12 · 12 · 2026  ·  The Woods</span>
+    <span class="s1-name" data-key="s1_name_carly" data-editable contenteditable="false">CARLY</span>
+    <span class="s1-and" data-key="s1_and" data-editable contenteditable="false">en</span>
+    <span class="s1-name" data-key="s1_name_roberto" data-editable contenteditable="false">ROBERTO</span>
+    <span class="s1-sub" data-key="s1_sub" data-editable contenteditable="false">Gaan trou!</span>
+  </div>
+  <input type="file" id="hero-file" accept="image/*" onchange="setBg(this)">
+</section>
+
+<!-- ═══ 2. PHOTO + DATE ═══ -->
+<section id="s2">
+  <button class="sec-hide-btn" onclick="toggleSection('s2')">👁 Versteek</button>
+  <div class="s2-left">
+    <div class="s2-photo-frame" onclick="adminOnly('couple-file')">
+      <img id="couple-img" src="" alt="">
+      <div class="s2-photo-ph" id="couple-ph">📷<br><br>Julle foto hier<br><small style="opacity:0.6">(via admin)</small></div>
+      <input type="file" id="couple-file" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'couple-img','couple-ph')">
+    </div>
+  </div>
+  <div class="s2-right">
+    <div class="s2-script" data-key="s2_script" data-editable contenteditable="false">12 Desember<br>2026</div>
+    <div class="s2-at" data-key="s2_at" data-editable contenteditable="false">by</div>
+    <div class="s2-venue" data-key="s2_venue" data-editable contenteditable="false">The Woods<br>Venue</div>
+    <div class="s2-divider"></div>
+    <p class="s2-body" data-key="s2_body" data-editable contenteditable="false">
+      Humansdorp · Oos-Kaap<br><br>
+      <a href="https://maps.google.com/?q=The+Woods+Venue+Humansdorp" target="_blank" style="color:var(--olive);font-family:'Lato',sans-serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;border-bottom:1px solid var(--olive);text-decoration:none;padding-bottom:2px;">
+        📍 Oop in Google Maps →
+      </a>
+    </p>
+  </div>
+</section>
+
+<!-- PHOTO STRIP A — after date section -->
+<div class="photo-strip photo-strip-3" id="psa">
+  <button class="sec-hide-btn" onclick="toggleSection('psa')" style="top:8px;right:8px;">👁 Versteek</button>
+  <div class="pstrip-slot" onclick="adminOnly('psa1-f')">
+    <img id="psa1"><div class="pph">📷<br>Foto</div>
+    <input type="file" id="psa1-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psa1',null)">
+  </div>
+  <div class="pstrip-slot" onclick="adminOnly('psa2-f')">
+    <img id="psa2"><div class="pph">📷<br>Foto</div>
+    <input type="file" id="psa2-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psa2',null)">
+  </div>
+  <div class="pstrip-slot" onclick="adminOnly('psa3-f')">
+    <img id="psa3"><div class="pph">📷<br>Foto</div>
+    <input type="file" id="psa3-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psa3',null)">
+  </div>
+</div>
+
+<!-- ═══ 3. SPECIAL DAY ═══ -->
+<section id="s3">
+  <button class="sec-hide-btn" onclick="toggleSection('s3')">👁 Versteek</button>
+  <div id="s3-bg">
+    <img id="s3-bg-img" src="" alt="">
+  </div>
+  <div id="s3-overlay"></div>
+  <div class="s3-stripe s3-stripe-l"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div id="s3-content">
+    <p class="s3-script" data-key="s3_script" data-editable contenteditable="false">Ons spesiale dag</p>
+    <p class="s3-body" id="s3-body" data-key="s3_body" data-editable contenteditable="false">Ons is so opgewonde om hierdie besondere oomblik in ons lewens<br>met ons geliefde familie en vriende te deel.<br><br>Julle liefde en ondersteuning beteken die wêreld vir ons,<br>en ons kan nie wag om hierdie onvergeetlike dag saam met julle te vier nie.<br><br>Baie dankie dat julle deel is van ons reis.</p>
+    <p class="s3-sig" data-key="s3_sig" data-editable contenteditable="false">met liefde, Carly &amp; Roberto</p>
+  </div>
+  <div class="s3-stripe s3-stripe-r"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <input type="file" id="s3-bg-file" accept="image/*" onchange="setPhotoBg(this,'s3-bg-img','s3-bg')">
+</section>
+
+<!-- ═══ 4. THE DAY ═══ -->
+<section id="s4">
+  <button class="sec-hide-btn" onclick="toggleSection('s4')">👁 Versteek</button>
+  <div class="s4-title" data-key="s4_title" data-editable contenteditable="false">Die Dag</div>
+  <div class="s4-sub" data-key="s4_sub" data-editable contenteditable="false">Ons spesiale dag begin — wees deel van elke oomblik</div>
+  <div class="s4-rule"></div>
+  <div class="s4-icons">
+
+    <div class="s4-item">
+      <div class="s4-ico">
+        <!-- Rings icon -->
+        <svg viewBox="0 0 40 40" fill="none" stroke="#3E4D35" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="14" cy="22" r="8"/>
+          <circle cx="26" cy="22" r="8"/>
+          <path d="M14 14 L14 10 M26 14 L26 10" stroke="#A8782A"/>
+          <path d="M11 10 L17 10 M23 10 L29 10" stroke="#A8782A" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="s4-time" id="t1" data-key="t1" data-editable contenteditable="false">15:00</div>
+      <div class="s4-label" data-editable contenteditable="false">Seremonie</div>
+    </div>
+
+    <div class="s4-item">
+      <div class="s4-ico">
+        <!-- Champagne glasses -->
+        <svg viewBox="0 0 40 40" fill="none" stroke="#3E4D35" stroke-width="1.8" stroke-linecap="round">
+          <path d="M13 8 L10 20 Q10 26 13 26 L13 34"/>
+          <path d="M27 8 L30 20 Q30 26 27 26 L27 34"/>
+          <line x1="10" y1="34" x2="16" y2="34"/><line x1="24" y1="34" x2="30" y2="34"/>
+          <line x1="13" y1="20" x2="27" y2="20"/>
+          <path d="M17 10 Q20 6 23 10" stroke="#A8782A" stroke-width="1.2"/>
+        </svg>
+      </div>
+      <div class="s4-time" id="t2" data-key="t2" data-editable contenteditable="false">16:30</div>
+      <div class="s4-label" data-editable contenteditable="false">Cocktail Uur</div>
+    </div>
+
+    <div class="s4-item">
+      <div class="s4-ico">
+        <!-- Cloche / dinner -->
+        <svg viewBox="0 0 40 40" fill="none" stroke="#3E4D35" stroke-width="1.8" stroke-linecap="round">
+          <path d="M8 26 Q8 14 20 14 Q32 14 32 26 Z"/>
+          <line x1="6" y1="26" x2="34" y2="26"/>
+          <line x1="6" y1="30" x2="34" y2="30"/>
+          <line x1="20" y1="10" x2="20" y2="14"/>
+          <circle cx="20" cy="9" r="1.5" fill="#A8782A" stroke="none"/>
+        </svg>
+      </div>
+      <div class="s4-time" id="t3" data-key="t3" data-editable contenteditable="false">18:30</div>
+      <div class="s4-label" data-editable contenteditable="false">Aandete</div>
+    </div>
+
+    <div class="s4-item">
+      <div class="s4-ico">
+        <!-- Cake tiers -->
+        <svg viewBox="0 0 40 40" fill="none" stroke="#3E4D35" stroke-width="1.8" stroke-linecap="round">
+          <rect x="10" y="26" width="20" height="8" rx="1"/>
+          <rect x="13" y="18" width="14" height="8" rx="1"/>
+          <rect x="16" y="12" width="8" height="6" rx="1"/>
+          <line x1="20" y1="8" x2="20" y2="12"/>
+          <circle cx="20" cy="7" r="1.5" fill="#A8782A" stroke="none"/>
+          <path d="M13 26 Q17 23 20 26 Q23 23 27 26" stroke="#A8782A" stroke-width="1.2"/>
+        </svg>
+      </div>
+      <div class="s4-time" id="t4" data-key="t4" data-editable contenteditable="false">20:00</div>
+      <div class="s4-label" data-editable contenteditable="false">Koek Sny</div>
+    </div>
+
+    <div class="s4-item">
+      <div class="s4-ico">
+        <!-- Dancing couple -->
+        <svg viewBox="0 0 40 40" fill="none" stroke="#3E4D35" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="15" cy="8" r="3"/>
+          <path d="M15 11 L15 22 M11 14 L19 14"/>
+          <path d="M15 22 L12 32 M15 22 L18 32"/>
+          <circle cx="27" cy="8" r="3"/>
+          <path d="M27 11 Q30 16 28 22 M24 14 Q29 12 30 14"/>
+          <path d="M28 22 L25 32 M28 22 L31 32"/>
+          <path d="M19 14 Q23 12 24 14" stroke="#A8782A" stroke-width="1.2"/>
+        </svg>
+      </div>
+      <div class="s4-time" id="t5" data-key="t5" data-editable contenteditable="false">20:30</div>
+      <div class="s4-label" data-editable contenteditable="false">Dans</div>
+    </div>
+
+    <div class="s4-item">
+      <div class="s4-ico">
+        <!-- Moon & stars -->
+        <svg viewBox="0 0 40 40" fill="none" stroke="#3E4D35" stroke-width="1.8" stroke-linecap="round">
+          <path d="M22 8 Q14 12 14 20 Q14 28 22 32 Q10 30 8 20 Q6 10 22 8Z"/>
+          <circle cx="30" cy="12" r="1.2" fill="#A8782A" stroke="none"/>
+          <circle cx="34" cy="20" r="1" fill="#A8782A" stroke="none"/>
+          <circle cx="28" cy="26" r="1.2" fill="#A8782A" stroke="none"/>
+        </svg>
+      </div>
+      <div class="s4-time" id="t6" data-key="t6" data-editable contenteditable="false">00:00</div>
+      <div class="s4-label" data-editable contenteditable="false">Tuistoe</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ FULLSCREEN PHOTO BREAK ═══ -->
+<section id="sfull" onclick="adminOnly('sfull-file')">
+  <button class="sec-hide-btn" onclick="event.stopPropagation();toggleSection('sfull')">👁 Versteek</button>
+  <div id="sfull-bg">
+    <img id="sfull-img" src="" alt="">
+  </div>
+  <div id="sfull-overlay"></div>
+  <div class="sfull-placeholder" id="sfull-ph">
+    <svg width="60" height="60" viewBox="0 0 60 60" fill="none" stroke="#F5F0E8" stroke-width="1.5">
+      <rect x="5" y="12" width="50" height="36" rx="3"/>
+      <circle cx="30" cy="30" r="10"/>
+      <circle cx="47" cy="19" r="3" fill="#F5F0E8" stroke="none"/>
+    </svg>
+    <p>Voeg 'n volskerm foto van julle in (via admin)</p>
+  </div>
+  <input type="file" id="sfull-file" accept="image/*" onclick="event.stopPropagation()" onchange="setFullPhoto(this)">
+</section>
+
+<!-- ═══ 7. MENU ═══ -->
+<section id="s7">
+  <button class="sec-hide-btn" onclick="toggleSection('s7')">👁 Versteek</button>
+  <div class="s7-inner">
+
+    <div class="s7-header reveal">
+      <div class="s7-title" data-key="s7_title" data-editable contenteditable="false">Spyskaart</div>
+      <div class="s7-sub" data-key="s7_sub" data-editable contenteditable="false">Aandete</div>
+      <div class="s7-divider"><span>✦</span></div>
+    </div>
+
+    <!-- Mains -->
+    <div class="s7-cat-heading reveal"><span data-editable contenteditable="false" data-key="text_s7_cat1">Hoofgeregte</span></div>
+    <div class="s7-dishes">
+      <div class="s7-dish reveal reveal-delay-1">
+        <p class="s7-dish-name" data-editable contenteditable="false">Lamspit</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Stadig gebraai oor 'n oop vuur met 'n soet marinade</p>
+      </div>
+      <div class="s7-dish reveal reveal-delay-2">
+        <p class="s7-dish-name" data-editable contenteditable="false">Geroosterde Hoenderdye</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Ontbeen, met suurlemoen- en koljanderbotter</p>
+      </div>
+    </div>
+
+    <!-- Sides -->
+    <div class="s7-cat-heading reveal"><span data-editable contenteditable="false" data-key="text_s7_cat2">Bykos</span></div>
+    <div class="s7-dishes">
+      <div class="s7-dish reveal reveal-delay-1">
+        <p class="s7-dish-name" data-editable contenteditable="false">Pampoentjies</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Gebraaid tot goudbruin met toffiesous</p>
+      </div>
+      <div class="s7-dish reveal reveal-delay-2">
+        <p class="s7-dish-name" data-editable contenteditable="false">Roosmaryn-Aartappeltjies</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Knoffel & roosmaryn, oondgeroosterd</p>
+      </div>
+      <div class="s7-dish reveal reveal-delay-3">
+        <p class="s7-dish-name" data-editable contenteditable="false">Fluffy Rys</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Sagte wit rys, perfek gestoom</p>
+      </div>
+      <div class="s7-dish reveal reveal-delay-4">
+        <p class="s7-dish-name" data-editable contenteditable="false">Geroosterde Seisoengroente</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Vars groente, oondgeroosterd met kruie</p>
+      </div>
+    </div>
+
+    <!-- Salad -->
+    <div class="s7-cat-heading reveal"><span data-editable contenteditable="false" data-key="text_s7_cat3">Slaai</span></div>
+    <div class="s7-dishes">
+      <div class="s7-dish s7-dish-single reveal">
+        <p class="s7-dish-name" data-editable contenteditable="false">Geroosterde Mielieslaai</p>
+        <p class="s7-dish-desc" data-editable contenteditable="false">Met avokado, aarbei & bokkaas-krummel — 'n fris en kleurvolle bord</p>
+      </div>
+    </div>
+
+    <!-- Cake -->
+    <div class="s7-cake reveal">
+      <p class="s7-cake-eyebrow" data-key="s7_cake_eye" data-editable contenteditable="false">Nagereg</p>
+      <p class="s7-cake-script" data-key="s7_cake_script" data-editable contenteditable="false">Ons Troukoek</p>
+      <p class="s7-cake-sub" data-editable contenteditable="false">Russiese Heuningkoek — laag vir laag, vol liefde gebak</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- PHOTO STRIP B — after menu -->
+<div class="photo-strip photo-strip-2" id="psb">
+  <button class="sec-hide-btn" onclick="toggleSection('psb')" style="top:8px;right:8px;">👁 Versteek</button>
+  <div class="pstrip-slot" style="aspect-ratio:16/9;" onclick="adminOnly('psb1-f')">
+    <img id="psb1"><div class="pph">📷<br>Foto</div>
+    <input type="file" id="psb1-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psb1',null)">
+  </div>
+  <div class="pstrip-slot" style="aspect-ratio:16/9;" onclick="adminOnly('psb2-f')">
+    <img id="psb2"><div class="pph">📷<br>Foto</div>
+    <input type="file" id="psb2-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psb2',null)">
+  </div>
+</div>
+
+<!-- ═══ DRESS CODE OWN SECTION ═══ -->
+<section id="sdress">
+  <button class="sec-hide-btn" onclick="toggleSection('sdress')">👁 Versteek</button>
+  <div class="sdress-inner">
+
+    <div class="sdress-top">
+      <!-- Left: text rules -->
+      <div>
+        <div class="sdress-heading" data-editable contenteditable="false">Dress Code</div>
+        <div class="sdress-sub" data-editable contenteditable="false">Formele Tuinstyl</div>
+
+        <div class="sdress-rule">
+          <p class="sdress-rule-lbl">Dames</p>
+          <p class="sdress-rule-txt" data-editable contenteditable="false">Lang vloeiende rokke of aandrokke word versoek. Ons nooi u om elegant en selfs 'n bietjie romanties te lyk — dink aan sagte sylstowwe, kant of vloeiende materiaal wat perfek pas vir 'n buitelug tuinfees.</p>
+        </div>
+        <div class="sdress-rule">
+          <p class="sdress-rule-lbl">Here</p>
+          <p class="sdress-rule-txt" data-editable contenteditable="false">Pak, formele langbroek met hemp of blazer. Geen jeans, kortbroek of tekkies asseblief. 'n Netjiese, goed aangetrokke voorkoms word baie waardeer.</p>
+        </div>
+        <div class="sdress-rule">
+          <p class="sdress-rule-lbl">Algemeen</p>
+          <p class="sdress-rule-txt" data-editable contenteditable="false">Ons fees is buitelug op gras — kies skoene dienooreenkomstig. Hoë hakke word nie aanbeveel vir die grasperk-gedeelte nie.</p>
+        </div>
+
+        <div class="sdress-note" data-editable contenteditable="false">
+          Ons wil hê u moet gemaklik én pragtig lyk. Kleure wat by ons palet pas, sal natuurlik op foto's pragtig uitkom — maar bo alles, dra iets waarin u u tuis voel.
+        </div>
+
+        <div class="sdress-tags">
+          <span class="sdress-tag sdress-tag-yes">Formeel</span>
+          <span class="sdress-tag sdress-tag-yes">Elegant</span>
+          <span class="sdress-tag sdress-tag-yes">Tuin</span>
+          <span class="sdress-tag sdress-tag-no">Jeans</span>
+          <span class="sdress-tag sdress-tag-no">Kortbroek</span>
+          <span class="sdress-tag sdress-tag-no">Tekkies</span>
+        </div>
+      </div>
+
+      <!-- Right: colour palette -->
+      <div>
+        <p class="sdress-palette-title">Voorkeur Kleurepalette</p>
+        <p style="font-size:0.9rem;color:var(--muted);line-height:1.8;margin-bottom:1.5rem;" data-editable contenteditable="false">Hierdie kleure pas pragtig by ons trouplekke en blomme. Alles binne hierdie palet is welkom — meng en match gerus.</p>
+        <div class="sdress-swatches">
+          <div class="swatch"><div class="swatch-circle" style="background:#3E4D35;"></div><span class="swatch-label">Olyf Groen</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#A8782A;"></div><span class="swatch-label">Goud</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#E8B4B8;"></div><span class="swatch-label">Bloos Pienk</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#8A9A6E;"></div><span class="swatch-label">Salie Groen</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#EDE5D4;"></div><span class="swatch-label">Botterroom</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#B8CCB0;"></div><span class="swatch-label">Mis Groen</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#D4C4A8;"></div><span class="swatch-label">Sandroos</span></div>
+          <div class="swatch"><div class="swatch-circle" style="background:#F5F0E8;border:1px solid #D5CDBE;"></div><span class="swatch-label">Wit / Room</span></div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--muted);font-style:italic;margin-top:0.5rem;">Vermy helder primêre kleure en swart indien moontlik.</p>
+      </div>
+    </div>
+
+    <!-- Photo inspiration row -->
+    <p class="sdress-palette-title" style="margin-bottom:1rem;">Inspirasie Fotos</p>
+    <div class="sdress-photos">
+      <div class="sdress-slot" onclick="adminOnly('dp1')"><img id="di1" src="" alt=""><div class="dph" id="di1-ph">👗<br>Dames<br><small style="opacity:0.6">via admin</small></div><input type="file" id="dp1" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'di1','di1-ph')"></div>
+      <div class="sdress-slot" onclick="adminOnly('dp2')"><img id="di2" src="" alt=""><div class="dph" id="di2-ph">👗<br>Dames<br><small style="opacity:0.6">via admin</small></div><input type="file" id="dp2" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'di2','di2-ph')"></div>
+      <div class="sdress-slot" onclick="adminOnly('dp3')"><img id="di3" src="" alt=""><div class="dph" id="di3-ph">🤵<br>Here<br><small style="opacity:0.6">via admin</small></div><input type="file" id="dp3" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'di3','di3-ph')"></div>
+      <div class="sdress-slot" onclick="adminOnly('dp4')"><img id="di4" src="" alt=""><div class="dph" id="di4-ph">🤵<br>Here<br><small style="opacity:0.6">via admin</small></div><input type="file" id="dp4" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'di4','di4-ph')"></div>
+    </div>
+    <p style="font-size:0.75rem;color:var(--muted);font-style:italic;margin-top:0.8rem;">Klik op 'n blokkie in admin-modus om 'n inspirasie foto op te laai</p>
+
+  </div>
+</section>
+
+<!-- ═══ 8. GIFTS — just before RSVP ═══ -->
+<section id="s8">
+  <button class="sec-hide-btn" onclick="toggleSection('s8')">👁 Versteek</button>
+  <div style="max-width:600px;margin:0 auto;padding:7rem 2rem;">
+    <h2 class="s8-gifts-title" data-editable contenteditable="false">geskenke</h2>
+    <div class="s8-gifts-box">
+      <p class="s8-gifts-intro" data-editable contenteditable="false">U teenwoordigheid is vir ons die grootste geskenk.<br>Vir diegene wat tog iets sou wil gee, het ons 'n wenslys:</p>
+      <div class="s8-gift-item" data-editable contenteditable="false">Kombuis stel (potte & panne)</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Luukse beddegoed</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Koffie- & teestel</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Wittebroodsreis fonds</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Kunswerke vir ons huis</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Tuin & buitelug items</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Huisdekor (kerse, lanterns)</div>
+      <div class="s8-gift-item" data-editable contenteditable="false">Wynversameling</div>
+      <p style="margin-top:1.5rem;font-size:0.88rem;color:var(--muted);font-style:italic;" data-editable contenteditable="false">Lys word nog voltooi — kontak ons vir EFT-besonderhede.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PHOTO STRIP C — between gifts and RSVP -->
+<div class="photo-strip photo-strip-3" id="psc">
+  <button class="sec-hide-btn" onclick="toggleSection('psc')" style="top:8px;right:8px;">👁 Versteek</button>
+  <div class="pstrip-slot" onclick="adminOnly('psc1-f')"><img id="psc1"><div class="pph">📷<br>Foto</div><input type="file" id="psc1-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psc1',null)"></div>
+  <div class="pstrip-slot" onclick="adminOnly('psc2-f')"><img id="psc2"><div class="pph">📷<br>Foto</div><input type="file" id="psc2-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psc2',null)"></div>
+  <div class="pstrip-slot" onclick="adminOnly('psc3-f')"><img id="psc3"><div class="pph">📷<br>Foto</div><input type="file" id="psc3-f" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'psc3',null)"></div>
+</div>
+
+<!-- ═══ 5. RSVP — near end, photo left / form right ═══ -->
+<section id="s5">
+  <button class="sec-hide-btn" onclick="toggleSection('s5')">👁 Versteek</button>
+  <!-- Left: couple photo -->
+  <div class="s5-photo" onclick="adminOnly('rsvp-photo-file')">
+    <img id="rsvp-photo-img" src="" alt="">
+    <div class="s5-photo-ph" id="rsvp-photo-ph">📷<br><br>Julle foto hier<br><small style="opacity:0.6">(via admin)</small></div>
+    <input type="file" id="rsvp-photo-file" accept="image/*" onclick="event.stopPropagation()" onchange="setPhoto(this,'rsvp-photo-img','rsvp-photo-ph')">
+  </div>
+
+  <!-- Right: RSVP form on olive -->
+  <div class="s5-form">
+    <h2 class="s5-title" data-editable contenteditable="false">RSVP</h2>
+    <p class="s5-body" data-editable contenteditable="false">Soek u naam hieronder en bevestig u bywoning. Laat ons ook weet van enige dieetvereistes.</p>
+    <span class="s5-deadline" data-editable contenteditable="false">Bevestig voor 1 November 2026</span>
+
+    <div id="rsvp-wrap">
+      <label class="flabel">Soek u naam</label>
+      <div style="position:relative;margin-bottom:1rem;">
+        <input class="finput" id="rn" type="text" placeholder="Begin tik u naam..." autocomplete="off"
+          oninput="filterNames()" onblur="setTimeout(hideDropdown,200)" style="margin-bottom:0;">
+        <div id="name-dropdown"></div>
+      </div>
+      <div id="name-confirmed" style="display:none;margin-bottom:1.2rem;padding:0.7rem 1rem;background:rgba(255,255,255,0.08);border-left:3px solid var(--gold);font-size:1rem;color:#F5F0E8;">
+        <span id="name-confirmed-text"></span>
+        <span onclick="resetName()" style="float:right;cursor:pointer;color:rgba(245,240,232,0.5);font-size:0.8rem;">✕</span>
+      </div>
+      <div id="rsvp-fields" style="display:none;">
+        <label class="flabel">E-posadres (opsioneel)</label>
+        <input class="finput" id="re" type="email" placeholder="jou@epos.com">
+        <label class="flabel">Kan u bywoon?</label>
+        <div class="rsvp-radios">
+          <div class="rsvp-radio" id="rv-y" onclick="setAtt('yes')">✓ Ja, ek kom!</div>
+          <div class="rsvp-radio" id="rv-n" onclick="setAtt('no')">✗ Kan nie kom</div>
+        </div>
+        <div id="plus-grp" style="display:none;">
+          <label class="flabel">Bring u 'n metgesel?</label>
+          <div class="rsvp-radios">
+            <div class="rsvp-radio" id="rp-y" onclick="setPlus(true)">Ja, ek bring iemand</div>
+            <div class="rsvp-radio" id="rp-n" onclick="setPlus(false)">Nee, net ek</div>
+          </div>
+        </div>
+        <div class="plusone-box" id="plus-box">
+          <label class="flabel">Metgesel se naam</label>
+          <input class="finput" id="rpn" type="text" placeholder="Volle naam van metgesel">
+        </div>
+        <label class="flabel">Dieetvereistes (opsioneel)</label>
+        <input class="finput" id="rd" type="text" placeholder="bv. Vegetaries, glutenvry...">
+        <label class="flabel">Boodskap (opsioneel)</label>
+        <textarea class="finput ftextarea" id="rm" rows="3" placeholder="'n Woord van gelukwense..."></textarea>
+        <button class="btn-submit" onclick="doRSVP()">Bevestig Bywoning</button>
+      </div>
+      <p id="not-on-list" style="display:none;color:#f4a0a0;font-size:0.88rem;font-style:italic;margin-top:0.5rem;">Hierdie naam is nie op ons gastelys nie. Kontak ons asseblief direk.</p>
+    </div>
+    <div class="rsvp-thanks" id="rsvp-thanks">
+      <h3>Baie Dankie!</h3>
+      <p>Ons het u RSVP ontvang.<br>Ons sien u uit op 12 Desember! 💛</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 6. OTHER DETAILS — below RSVP ═══ -->
+<section id="s6">
+  <button class="sec-hide-btn" onclick="toggleSection('s6')">👁 Versteek</button>
+  <div class="s6-title" data-editable contenteditable="false">Ander Besonderhede</div>
+  <div class="s6-grid" id="s6-grid">
+    <!-- blocks loaded dynamically from Supabase -->
+  </div>
+</section>
+
+<!-- ═══ 9. SIGN-OFF ═══ -->
+<section id="s9">
+  <button class="sec-hide-btn" onclick="toggleSection('s9')">👁 Versteek</button>
+  <p class="s3-script" data-key="s9_heading" data-editable contenteditable="false">Tot op 12 Desember...</p>
+  <p class="s9-body" data-key="s9_body" data-editable contenteditable="false">As u enige vrae het, kontak ons gerus.<br>Ons kan nie wag om hierdie dag saam met u te vier nie.</p>
+  <p class="s9-love" data-key="s9_love" data-editable contenteditable="false">met liefde</p>
+  <p class="s9-sig" data-key="s9_sig" data-editable contenteditable="false">Carly &amp; Roberto</p>
+</section>
+
+<footer>
+  12 · 12 · 2026 &nbsp;·&nbsp; The Woods Venue &nbsp;·&nbsp; Humansdorp &nbsp;·&nbsp; Oos-Kaap
+</footer>
+
+<!-- ADMIN LOGIN BUTTON -->
+<!-- admin btn removed - C&R is secret trigger -->
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="overlay" id="login-overlay">
+  <div class="modal" style="max-width:400px;">
+    <button class="modal-x" onclick="document.getElementById('login-overlay').classList.remove('open')">✕</button>
+    <h2>Admin Toegang</h2>
+    <p class="msub">Voer wagwoord in om die webblad te wysig.</p>
+    <label class="flabel" style="color:var(--muted)">Wagwoord</label>
+    <input class="aedit" type="password" id="apw" placeholder="••••••" style="margin-bottom:0.8rem;" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="abtn ab-o" onclick="doLogin()">Meld Aan</button>
+    <p id="aerr" style="color:#a33;font-size:0.82rem;margin-top:0.5rem;display:none;">Verkeerde wagwoord.</p>
+  </div>
+</div>
+
+<!-- ADMIN DATA MODAL (gastelys + RSVP dashboard) -->
+<div class="overlay" id="adm-overlay">
+  <div class="modal">
+    <button class="modal-x" onclick="document.getElementById('adm-overlay').classList.remove('open')">✕</button>
+    <h2>Admin Paneel</h2>
+    <p class="msub">Gastelys, RSVP dashboard en foto-uploads.</p>
+
+    <div class="asec">
+      <h3>📷 Fotos (admin-beheer)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('hero-file').click()">🖼 Hero agtergrond</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('couple-file').click()">📷 Paartjie (seksie 2)</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('s3-bg-file').click()">🌿 Spesiale Dag agtergrond</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('sfull-file').click()">🖼 Volskerm foto (tussen program & spyskaart)</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('rsvp-photo-file').click()">📷 RSVP foto</div>
+        <div style="grid-column:1/-1;font-family:'Lato',sans-serif;font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:#A8782A;padding-top:0.5rem;border-top:1px solid #eee;">Foto Stroke</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psa1-f').click()">📷 Strip A · Foto 1</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psa2-f').click()">📷 Strip A · Foto 2</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psa3-f').click()">📷 Strip A · Foto 3</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psb1-f').click()">📷 Strip B · Foto 1</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psb2-f').click()">📷 Strip B · Foto 2</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psc1-f').click()">📷 Strip C · Foto 1</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psc2-f').click()">📷 Strip C · Foto 2</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('psc3-f').click()">📷 Strip C · Foto 3</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('dp1').click()">👗 Dress - Dames 1</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('dp2').click()">👗 Dress - Dames 2</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('dp3').click()">🤵 Dress - Here 1</div>
+        <div style="border:1px dashed #ccc;padding:0.8rem;text-align:center;cursor:pointer;font-size:0.72rem;color:#aaa;" onclick="document.getElementById('dp4').click()">🤵 Dress - Here 2</div>
+      </div>
+    </div>
+
+    <div class="asec">
+      <h3>📋 Ander Besonderhede — Blokke</h3>
+      <p style="font-family:'Lato',sans-serif;font-size:0.7rem;color:var(--muted);margin-bottom:1rem;">Voeg blokke by of verwyder hulle. Klik op teks om te wysig — dit stoor outomaties.</p>
+      <div id="admin-blocks-preview" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1rem;max-height:200px;overflow-y:auto;"></div>
+      <div style="border-top:1px solid var(--cream2);padding-top:1rem;">
+        <p style="font-family:'Lato',sans-serif;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">+ Voeg Nuwe Blok By</p>
+        <input class="aedit" id="new-block-label" placeholder="Opskrif (bv. Akkommodasie)" style="margin-bottom:0.4rem;">
+        <textarea class="aedit" id="new-block-text" placeholder="Inhoud van die blok..." rows="3" style="resize:vertical;margin-bottom:0.5rem;"></textarea>
+        <button class="abtn ab-o" onclick="addInfoBlock()">+ Voeg By</button>
+      </div>
+    </div>
+
+    <div class="asec">
+      <h3>👥 Gastelys</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.7rem;">Gaste hier ingevoeg kry die metgesel-opsie by RSVP indien toegelaat. Fotos en dresscode is ook slegs via admin bewerkbaar.</p>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+        <input class="aedit" id="ng" placeholder="Gas se naam" style="flex:1;min-width:130px;margin-bottom:0;">
+        <select class="aedit" id="ngp" style="flex:0 0 140px;margin-bottom:0;">
+          <option value="no">Geen plus-een</option>
+          <option value="yes">Plus-een toegelaat</option>
+        </select>
+        <button class="abtn ab-g" onclick="addGuest()">+ Voeg Toe</button>
+      </div>
+      <div class="gbox" id="gbox"><div style="padding:0.8rem;text-align:center;font-size:0.82rem;color:var(--muted)">Lys is leeg</div></div>
+    </div>
+
+    <div class="asec">
+      <h3>📋 RSVP Dashboard</h3>
+      <div id="rsvp-summary"></div>
+      <table class="rtbl">
+        <thead><tr><th>Naam</th><th>Bywoon</th><th>Metgesel</th><th>Dieet</th><th>Boodskap</th></tr></thead>
+        <tbody id="rtbody"></tbody>
+      </table>
+      <div style="margin-top:1.2rem;">
+        <p style="font-family:'Lato',sans-serif;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;">⏳ Nog nie geantwoord nie</p>
+        <div id="pending-list" style="max-height:130px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <button class="abtn ab-r" onclick="document.getElementById('adm-overlay').classList.remove('open')">Sluit</button>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──
+const SUPA_URL = 'https://jsdnsvpbeioqcqklfbgf.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzZG5zdnBiZWlvcWNxa2xmYmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NDUyMzksImV4cCI6MjA5NzUyMTIzOX0.iXaIu1xA3QFvySDjdGaOg_RoQMkj0L17UTTa8_bYgAw';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const PW='carly2026';
+let guests=[];
+let rsvps=[];
+let att=null,plusY=null,selectedGuest=null;
+let adminLoggedIn=false, editModeOn=false, currentEditable=null;
+
+// ── LOAD DATA ON START ──
+async function loadData(){
+  // Load guests
+  const {data:gData,error:gErr} = await sb.from('guests').select('*').order('name');
+  if(!gErr && gData) guests = gData.map(g=>({name:g.name, plus:g.plus_one?'yes':'no', id:g.id}));
+
+  // Load rsvps
+  const {data:rData,error:rErr} = await sb.from('rsvps').select('*').order('submitted_at');
+  if(!rErr && rData) rsvps = rData.map(r=>({
+    name:r.guest_name,
+    attending:r.attending,
+    plusname:r.plus_guest_name||'',
+    diet:r.diet||'',
+    msg:r.message||'',
+    ts:r.submitted_at
+  }));
+
+  // Load settings (photos + info blocks)
+  const {data:sData} = await sb.from('settings').select('*');
+  if(sData){
+    sData.forEach(row=>{
+      if(row.key==='info_blocks'){
+        try{
+          infoBlocks = JSON.parse(row.value);
+          renderInfoBlocks();
+        }catch(e){}
+      } else {
+        applyStoredPhoto(row.key, row.value);
+      }
+    });
+  }
+  // If no blocks saved yet, use defaults
+  if(infoBlocks.length===0){
+    infoBlocks = [
+      {id:'b1', label:'Kleredrag', text:'Formele tuinstyl — dames in lang rokke, here in pak of formele drag. Geen jeans asseblief.'},
+      {id:'b2', label:'Kinders', text:'Hierdie fees is slegs vir volwassenes. Ons waardeer u begrip hiervoor.'},
+      {id:'b3', label:'Rigting na Venue', text:'The Woods Venue, Humansdorp.'},
+      {id:'b4', label:'Kontak', text:'Vrae? Stuur ons \'n boodskap — ons help u graag verder.'},
+    ];
+    renderInfoBlocks();
+  }
+}
+
+// ── INFO BLOCKS ──
+let infoBlocks = [];
+
+function renderInfoBlocks(){
+  const grid = document.getElementById('s6-grid');
+  if(!grid) return;
+  grid.innerHTML = infoBlocks.map((b,i)=>`
+    <div class="s6-block" id="block-${b.id}">
+      ${adminLoggedIn ? `<button onclick="deleteInfoBlock('${b.id}')" title="Verwyder blok" style="float:right;background:none;border:none;color:#a33;cursor:pointer;font-size:1rem;margin-top:-0.3rem;">✕</button>` : ''}
+      <p class="s6-block-label" ${adminLoggedIn?`data-editable contenteditable="true" onblur="saveInfoBlocks()"`:``}>${b.label}</p>
+      <p class="s6-block-text" ${adminLoggedIn?`data-editable contenteditable="true" onblur="saveInfoBlocks()"`:``}>${b.text}</p>
+    </div>
+  `).join('');
+}
+
+async function saveInfoBlocks(){
+  // Read current DOM content back into infoBlocks
+  infoBlocks.forEach(b=>{
+    const el = document.getElementById('block-'+b.id);
+    if(!el) return;
+    const lbl = el.querySelector('.s6-block-label');
+    const txt = el.querySelector('.s6-block-text');
+    if(lbl) b.label = lbl.innerHTML;
+    if(txt) b.text = txt.innerHTML;
+  });
+  await sb.from('settings').upsert({key:'info_blocks', value:JSON.stringify(infoBlocks)});
+}
+
+async function addInfoBlock(){
+  const label = document.getElementById('new-block-label').value.trim();
+  const text = document.getElementById('new-block-text').value.trim();
+  if(!label) return;
+  const newBlock = {id:'b'+Date.now(), label, text};
+  infoBlocks.push(newBlock);
+  await sb.from('settings').upsert({key:'info_blocks', value:JSON.stringify(infoBlocks)});
+  document.getElementById('new-block-label').value='';
+  document.getElementById('new-block-text').value='';
+  renderInfoBlocks();
+}
+
+async function deleteInfoBlock(id){
+  if(!confirm('Verwyder hierdie blok?')) return;
+  infoBlocks = infoBlocks.filter(b=>b.id!==id);
+  await sb.from('settings').upsert({key:'info_blocks', value:JSON.stringify(infoBlocks)});
+  renderInfoBlocks();
+}
+
+function applyStoredPhoto(key, url){
+  const map = {
+    'photo_hero':   ()=>{ const i=document.getElementById('hero-bg'); if(i){i.src=url;i.style.display='block';try{document.getElementById('s1-bg').style.background='#000';}catch(e){}} },
+    'photo_s3_bg_img': ()=>{ const i=document.getElementById('s3-bg-img'); if(i){i.src=url;i.style.display='block';} },
+    'photo_couple_img': ()=>{ const i=document.getElementById('couple-img'); if(i){i.src=url;i.style.display='block';try{document.getElementById('couple-ph').style.display='none';}catch(e){}} },
+    'photo_couple': ()=>{ const i=document.getElementById('couple-img'); if(i){i.src=url;i.style.display='block';try{document.getElementById('couple-ph').style.display='none';}catch(e){}} },
+    'photo_s3bg':   ()=>{ const i=document.getElementById('s3-bg-img'); if(i){i.src=url;i.style.display='block';} },
+    'photo_sfull':  ()=>{ const i=document.getElementById('sfull-img'); if(i){i.src=url;i.style.display='block';try{document.getElementById('sfull-ph').style.display='none';}catch(e){}} },
+    'photo_rsvp':   ()=>{ const i=document.getElementById('rsvp-photo-img'); if(i){i.src=url;i.style.display='block';try{document.getElementById('rsvp-photo-ph').style.display='none';}catch(e){}} },
+    'photo_di1': ()=>{ const i=document.getElementById('di1'); if(i){i.src=url;i.style.display='block';try{document.getElementById('di1-ph').style.display='none';}catch(e){}} },
+    'photo_di2': ()=>{ const i=document.getElementById('di2'); if(i){i.src=url;i.style.display='block';try{document.getElementById('di2-ph').style.display='none';}catch(e){}} },
+    'photo_di3': ()=>{ const i=document.getElementById('di3'); if(i){i.src=url;i.style.display='block';try{document.getElementById('di3-ph').style.display='none';}catch(e){}} },
+    'photo_di4': ()=>{ const i=document.getElementById('di4'); if(i){i.src=url;i.style.display='block';try{document.getElementById('di4-ph').style.display='none';}catch(e){}} },
+    'photo_couple_img': ()=>{ const i=document.getElementById('couple-img'); if(i){i.src=url;i.style.display='block';try{document.getElementById('couple-ph').style.display='none';}catch(e){}} },
+    'photo_rsvp_photo_img': ()=>{ const i=document.getElementById('rsvp-photo-img'); if(i){i.src=url;i.style.display='block';try{document.getElementById('rsvp-photo-ph').style.display='none';}catch(e){}} },
+    'photo_psa1': ()=>{ const i=document.getElementById('psa1-img'); if(i){i.src=url;i.style.display='block';} },
+    'photo_psa2': ()=>{ const i=document.getElementById('psa2-img'); if(i){i.src=url;i.style.display='block';} },
+    'photo_psa3': ()=>{ const i=document.getElementById('psa3-img'); if(i){i.src=url;i.style.display='block';} },
+    'photo_psb1': ()=>{ const i=document.getElementById('psb1-img'); if(i){i.src=url;i.style.display='block';} },
+    'photo_psb2': ()=>{ const i=document.getElementById('psb2-img'); if(i){i.src=url;i.style.display='block';} },
+  };
+  if(map[key]) map[key]();
+}
+
+async function uploadPhoto(file, settingKey, onSuccess){
+  // Show uploading toast
+  let toast = document.getElementById('upload-toast');
+  if(!toast){ toast=document.createElement('div'); toast.id='upload-toast'; toast.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a2415;color:#A8782A;font-family:Lato,sans-serif;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.8rem 2rem;z-index:99999;border:1px solid rgba(168,120,42,0.4);'; document.body.appendChild(toast); }
+  toast.textContent='⏳ Foto besig om op te laai...';toast.style.display='block';
+  const ext = file.name.split('.').pop();
+  const path = settingKey + '_' + Date.now() + '.' + ext;
+  const {error} = await sb.storage.from('wedding-photos').upload(path, file, {upsert:true});
+  if(error){ console.error('Upload error',error); toast.textContent='❌ Upload het misluk: '+error.message; setTimeout(()=>{toast.style.display='none';},4000); return; }
+  const {data:{publicUrl}} = sb.storage.from('wedding-photos').getPublicUrl(path);
+  await sb.from('settings').upsert({key:settingKey, value:publicUrl});
+  toast.textContent='✓ Foto opgelaai!'; setTimeout(()=>{toast.style.display='none';},2500);
+  if(onSuccess) onSuccess(publicUrl);
+}
+
+async function init(){
+  await loadData();
+  await loadEditableText();
+  await loadVisibility();
+}
+init();
+
+// ── PHOTO LOADERS (Supabase Storage) ──
+function setBg(inp){
+  const f=inp.files[0];if(!f)return;
+  uploadPhoto(f,'photo_hero',(url)=>{
+    const bg=document.getElementById('hero-bg');bg.src=url;bg.style.display='block';
+    document.getElementById('s1-bg').style.background='#000';
+  });
+}
+function setPhotoBg(inp, imgId, bgId){
+  const f=inp.files[0];if(!f)return;
+  const key='photo_'+imgId.replace(/-/g,'_');
+  uploadPhoto(f,key,(url)=>{
+    const img=document.getElementById(imgId);img.src=url;img.style.display='block';
+    try{document.getElementById(bgId).style.background='#000';}catch(e){}
+  });
+}
+function setFullPhoto(inp){
+  const f=inp.files[0];if(!f)return;
+  uploadPhoto(f,'photo_sfull',(url)=>{
+    const img=document.getElementById('sfull-img');img.src=url;img.style.display='block';
+    document.getElementById('sfull-ph').style.display='none';
+  });
+}
+function setPhoto(inp,imgId,phId){
+  const f=inp.files[0];if(!f)return;
+  const key='photo_'+imgId.replace(/-/g,'_');
+  uploadPhoto(f,key,(url)=>{
+    const img=document.getElementById(imgId);img.src=url;img.style.display='block';
+    if(phId){const ph=document.getElementById(phId);if(ph)ph.style.display='none';}
+  });
+}
+// Only allow photo uploads when admin is logged in
+function adminOnly(fileInputId){
+  if(!adminLoggedIn){return;}
+  document.getElementById(fileInputId).click();
+}
+
+// ── RSVP AUTOCOMPLETE ──
+function filterNames(){
+  const val=document.getElementById('rn').value.trim().toLowerCase();
+  const dd=document.getElementById('name-dropdown');
+  document.getElementById('not-on-list').style.display='none';
+  if(!val||guests.length===0){dd.style.display='none';return;}
+  const matches=guests.filter(g=>g.name.toLowerCase().includes(val));
+  if(!matches.length){dd.style.display='none';return;}
+  dd.innerHTML=matches.map(g=>`
+    <div class="dd-item" onclick="selectName('${g.name.replace(/'/g,"\\'")}','${g.plus}')">
+      ${g.name}${g.plus==='yes'?'<span class="dd-plus">+ metgesel</span>':''}
+    </div>`).join('');
+  dd.style.display='block';
+}
+function selectName(name,plus){
+  selectedGuest={name,plus};
+  document.getElementById('rn').value=name;
+  document.getElementById('name-dropdown').style.display='none';
+  document.getElementById('name-confirmed').style.display='block';
+  document.getElementById('name-confirmed-text').textContent='✓  '+name;
+  document.getElementById('rsvp-fields').style.display='block';
+  document.getElementById('not-on-list').style.display='none';
+  document.getElementById('plus-grp').style.display=plus==='yes'?'block':'none';
+  setPlus(false);
+}
+function hideDropdown(){
+  document.getElementById('name-dropdown').style.display='none';
+  const val=document.getElementById('rn').value.trim();
+  if(val&&guests.length>0&&!selectedGuest){
+    const exact=guests.find(g=>g.name.toLowerCase()===val.toLowerCase());
+    if(!exact){document.getElementById('not-on-list').style.display='block';document.getElementById('rsvp-fields').style.display='none';}
+  }
+}
+function resetName(){
+  selectedGuest=null;att=null;plusY=null;
+  document.getElementById('rn').value='';
+  document.getElementById('name-confirmed').style.display='none';
+  document.getElementById('rsvp-fields').style.display='none';
+  document.getElementById('not-on-list').style.display='none';
+  document.getElementById('rv-y').classList.remove('on');
+  document.getElementById('rv-n').classList.remove('on');
+  setPlus(false);
+}
+function setAtt(v){att=v;document.getElementById('rv-y').classList.toggle('on',v==='yes');document.getElementById('rv-n').classList.toggle('on',v==='no');}
+function setPlus(v){
+  plusY=v;
+  const y=document.getElementById('rp-y'),n=document.getElementById('rp-n');
+  if(y){y.classList.toggle('on',v);n.classList.toggle('on',!v);}
+  document.getElementById('plus-box').classList.toggle('show',v);
+}
+async function doRSVP(){
+  if(!selectedGuest&&guests.length>0){alert('Soek en kies u naam uit die lys.');return;}
+  const name=selectedGuest?selectedGuest.name:document.getElementById('rn').value.trim();
+  if(!name){alert('Voer u naam in.');return;}
+  if(!att){alert('Kies of u bywoon.');return;}
+  if(rsvps.find(r=>r.name.toLowerCase()===name.toLowerCase())){alert('Ons het reeds u RSVP ontvang.');return;}
+  const btn=document.querySelector('.btn-submit');
+  if(btn){btn.textContent='Besig...';btn.disabled=true;}
+  const {error} = await sb.from('rsvps').insert({
+    guest_name: name,
+    attending: att,
+    plus_guest_name: plusY?document.getElementById('rpn').value.trim():null,
+    diet: document.getElementById('rd').value.trim()||null,
+    message: document.getElementById('rm').value.trim()||null
+  });
+  if(error){
+    console.error('RSVP error',error);
+    alert('Iets het fout gegaan. Probeer asseblief weer.');
+    if(btn){btn.textContent='Bevestig Bywoning';btn.disabled=false;}
+    return;
+  }
+  // Update local state
+  rsvps.push({name,attending:att,plusname:plusY?document.getElementById('rpn').value.trim():'',diet:document.getElementById('rd').value.trim(),msg:document.getElementById('rm').value.trim(),ts:new Date().toISOString()});
+  document.getElementById('rsvp-wrap').style.display='none';
+  document.getElementById('rsvp-thanks').style.display='block';
+}
+
+// ── ADMIN LOGIN ──
+function openAdminLogin(){
+  document.getElementById('login-overlay').classList.add('open');
+  document.getElementById('apw').value='';
+  document.getElementById('aerr').style.display='none';
+}
+function doLogin(){
+  if(document.getElementById('apw').value===PW){
+    adminLoggedIn=true;
+    document.getElementById('login-overlay').classList.remove('open');
+    document.getElementById('admin-bar').classList.add('show');
+    // Push content down to make room for admin bar
+    document.body.style.paddingTop='84px';
+  } else {
+    document.getElementById('aerr').style.display='block';
+  }
+}
+function doLogout(){
+  adminLoggedIn=false;editModeOn=false;hideModeOn=false;
+  document.getElementById('admin-bar').classList.remove('show');
+  document.getElementById('vis-panel').classList.remove('show');
+  document.body.classList.remove('admin-mode');
+  document.body.style.paddingTop='';
+  document.querySelectorAll('[data-editable]').forEach(el=>{el.contentEditable='false';});
+  document.getElementById('font-toolbar').classList.remove('show');
+  document.getElementById('btn-edit-mode').textContent='✏️ Wysig Teks Aan';
+  document.getElementById('btn-edit-mode').classList.add('active');
+  // Re-render blocks without admin controls
+  renderInfoBlocks();
+}
+async function openAdminModal(){
+  document.getElementById('adm-overlay').classList.add('open');
+  await loadData();
+  renderAdmin();
+  // Show blocks preview in admin panel
+  const preview = document.getElementById('admin-blocks-preview');
+  if(preview){
+    preview.innerHTML = infoBlocks.map(b=>`
+      <div style="background:var(--cream2);padding:0.6rem 0.8rem;border:1px solid #D5CDBE;position:relative;">
+        <div style="font-family:'Lato',sans-serif;font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.3rem;">${b.label}</div>
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.5;">${b.text.substring(0,60)}${b.text.length>60?'...':''}</div>
+        <button onclick="deleteInfoBlock('${b.id}')" style="position:absolute;top:0.4rem;right:0.5rem;background:none;border:none;color:#a33;cursor:pointer;font-size:0.9rem;">✕</button>
+      </div>
+    `).join('');
+  }
+  // Re-render blocks on page with edit capability
+  renderInfoBlocks();
+}
+
+// ── HIDE MODE ──
+let hideModeOn=false;
+function toggleHideMode(){
+  hideModeOn=!hideModeOn;
+  const panel=document.getElementById('vis-panel');
+  panel.classList.toggle('show',hideModeOn);
+  const btn=document.getElementById('btn-hide-mode');
+  btn.textContent=hideModeOn?'👁 Sluit Versteek Paneel':'👁 Wys/Versteek Seksies';
+  btn.classList.toggle('active',hideModeOn);
+}
+async function toggleSec(id,checkbox){
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(checkbox.checked){
+    el.classList.remove('sec-hidden');
+  } else {
+    el.classList.add('sec-hidden');
+  }
+  // Save all visibility states to Supabase
+  await saveVisibility();
+}
+
+async function saveVisibility(){
+  const vis={};
+  document.querySelectorAll('#vis-panel input[type=checkbox]').forEach(cb=>{
+    // get the section id from the onchange attribute
+    const match = cb.getAttribute('onchange').match(/toggleSec\('([^']+)'/);
+    if(match) vis[match[1]] = cb.checked;
+  });
+  await sb.from('settings').upsert({key:'section_visibility', value:JSON.stringify(vis)});
+}
+
+async function loadVisibility(){
+  const {data} = await sb.from('settings').select('value').eq('key','section_visibility').single();
+  if(!data) return;
+  try{
+    const vis = JSON.parse(data.value);
+    Object.entries(vis).forEach(([id, visible])=>{
+      const el = document.getElementById(id);
+      const cb = document.querySelector('#vis-panel input[data-secid="'+id+'"]');
+      if(el){
+        if(visible){ el.classList.remove('sec-hidden'); }
+        else { el.classList.add('sec-hidden'); }
+      }
+      if(cb) cb.checked = visible;
+    });
+  }catch(e){}
+}
+
+
+function toggleEditMode(){
+  editModeOn=!editModeOn;
+  document.body.classList.toggle('admin-mode',editModeOn);
+  const btn=document.getElementById('btn-edit-mode');
+  if(editModeOn){
+    document.body.classList.add('admin-mode');
+    document.querySelectorAll('[data-editable]').forEach(el=>{
+      el.contentEditable='true';
+      // Font toolbar on focus
+      if(!el._focusBound){
+        el._focusBound=true;
+        el.addEventListener('focus',showFontToolbar);
+      }
+      // Save on blur
+      if(!el._blurBound){
+        el._blurBound=true;
+        el.addEventListener('blur',async function(){
+          const key = el.getAttribute('data-key');
+          if(!key) return;
+          await sb.from('settings').upsert({key:'editable_'+key, value:el.innerHTML});
+        });
+      }
+    });
+    btn.textContent='✏️ Wysig Teks Af';
+    btn.classList.remove('active');
+  } else {
+    document.body.classList.remove('admin-mode');
+    document.querySelectorAll('[data-editable]').forEach(el=>{el.contentEditable='false';});
+    btn.textContent='✏️ Wysig Teks Aan';
+    btn.classList.add('active');
+    document.getElementById('font-toolbar').classList.remove('show');
+  }
+}
+
+async function loadEditableText(){
+  const {data,error} = await sb.from('settings').select('key,value').like('key','editable_%');
+  if(!error && data) data.forEach(row=>{
+    const key = row.key.replace('editable_','');
+    const el = document.querySelector('[data-key="'+key+'"]');
+    if(el) el.innerHTML = row.value;
+  });
+  // Also load saved styles (font size, family, color)
+  const {data:sdata,error:serr} = await sb.from('settings').select('key,value').like('key','style_%');
+  if(!serr && sdata) sdata.forEach(row=>{
+    const key = row.key.replace('style_','');
+    const el = document.querySelector('[data-key="'+key+'"]');
+    if(el && row.value) el.setAttribute('style', row.value);
+  });
+}
+
+function showFontToolbar(e){
+  if(!editModeOn)return;
+  currentEditable=e.target;
+  const ft=document.getElementById('font-toolbar');
+  const rect=e.target.getBoundingClientRect();
+  ft.style.top=(rect.bottom+window.scrollY+6)+'px';
+  ft.style.left=Math.max(8,rect.left)+'px';
+  ft.classList.add('show');
+  // Load current styles into toolbar
+  const cs=window.getComputedStyle(e.target);
+  document.getElementById('ft-size').value=parseFloat(cs.fontSize)/16;
+}
+
+async function saveCurrentStyle(){
+  if(!currentEditable) return;
+  const key = currentEditable.getAttribute('data-key');
+  if(!key) return;
+  // Save both innerHTML AND inline style
+  await sb.from('settings').upsert({key:'editable_'+key, value:currentEditable.innerHTML});
+  await sb.from('settings').upsert({key:'style_'+key, value:currentEditable.getAttribute('style')||''});
+}
+
+function applyFont(){
+  if(!currentEditable)return;
+  const fam=document.getElementById('ft-family').value;
+  const size=document.getElementById('ft-size').value;
+  const col=document.getElementById('ft-color').value;
+  if(fam)currentEditable.style.fontFamily=fam;
+  if(size)currentEditable.style.fontSize=size+'rem';
+  if(col)currentEditable.style.color=col;
+  saveCurrentStyle();
+}
+function applyBold(){
+  if(!currentEditable)return;
+  const cur=window.getComputedStyle(currentEditable).fontWeight;
+  currentEditable.style.fontWeight=(parseInt(cur)>=700)?'300':'700';
+  saveCurrentStyle();
+}
+function applyItalic(){
+  if(!currentEditable)return;
+  const cur=window.getComputedStyle(currentEditable).fontStyle;
+  currentEditable.style.fontStyle=(cur==='italic')?'normal':'italic';
+  saveCurrentStyle();
+}
+
+// ── ADMIN DATA ──
+async function addGuest(){
+  const n=document.getElementById('ng').value.trim(),p=document.getElementById('ngp').value;
+  if(!n)return;
+  if(guests.find(g=>g.name.toLowerCase()===n.toLowerCase())){alert('Gas bestaan reeds.');return;}
+  const {error} = await sb.from('guests').insert({name:n, plus_one:p==='yes'});
+  if(error){alert('Kon nie gas byvoeg nie: '+error.message);return;}
+  guests.push({name:n,plus:p});
+  document.getElementById('ng').value='';
+  renderAdmin();
+}
+async function delGuest(i){
+  if(!confirm('Verwyder '+guests[i].name+'?'))return;
+  const {error} = await sb.from('guests').delete().eq('name',guests[i].name);
+  if(error){alert('Kon nie verwyder nie: '+error.message);return;}
+  guests.splice(i,1);
+  renderAdmin();
+}
+function renderAdmin(){
+  const gb=document.getElementById('gbox');
+  gb.innerHTML=guests.length===0
+    ?'<div style="padding:0.8rem;text-align:center;font-size:0.82rem;color:var(--muted)">Lys is leeg — voeg gaste bo in</div>'
+    :guests.map((g,i)=>`<div class="grow"><span class="gn">${g.name}</span><span class="gp">${g.plus==='yes'?'<span style="color:#A8782A">✅ plus-een</span>':''}</span><button class="gdel" onclick="delGuest(${i})">✕</button></div>`).join('');
+
+  const yes=rsvps.filter(r=>r.attending==='yes');
+  const no=rsvps.filter(r=>r.attending==='no');
+  const pending=guests.filter(g=>!rsvps.find(r=>r.name.toLowerCase()===g.name.toLowerCase()));
+  const plusCount=rsvps.filter(r=>r.plusname).length;
+
+  document.getElementById('rsvp-summary').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.6rem;margin-bottom:1.2rem;">
+      <div style="background:#d4edda;padding:1rem;text-align:center;">
+        <div style="font-size:1.8rem;font-family:'Playfair Display',serif;color:#2d6a4f;">${yes.length}</div>
+        <div style="font-family:Lato,sans-serif;font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:#2d6a4f;">Bevestig</div>
+      </div>
+      <div style="background:#fde8e8;padding:1rem;text-align:center;">
+        <div style="font-size:1.8rem;font-family:'Playfair Display',serif;color:#9b2226;">${no.length}</div>
+        <div style="font-family:Lato,sans-serif;font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:#9b2226;">Afgesê</div>
+      </div>
+      <div style="background:#fff3cd;padding:1rem;text-align:center;">
+        <div style="font-size:1.8rem;font-family:'Playfair Display',serif;color:#856404;">${pending.length}</div>
+        <div style="font-family:Lato,sans-serif;font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:#856404;">Uitstaande</div>
+      </div>
+      <div style="background:#e8d8f0;padding:1rem;text-align:center;">
+        <div style="font-size:1.8rem;font-family:'Playfair Display',serif;color:#5a2d82;">${plusCount}</div>
+        <div style="font-family:Lato,sans-serif;font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:#5a2d82;">Plus-een</div>
+      </div>
+    </div>`;
+
+  const tb=document.getElementById('rtbody');
+  tb.innerHTML=rsvps.length===0
+    ?'<tr><td colspan="5" style="text-align:center;padding:1rem;color:var(--muted);font-style:italic;">Geen RSVP\'s nog ontvang nie</td></tr>'
+    :rsvps.map(r=>`<tr><td><strong>${r.name}</strong></td><td><span class="bdg ${r.attending==='yes'?'by':'bn'}">${r.attending==='yes'?'✓ Kom':'✗ Nee'}</span></td><td>${r.plusname||'—'}</td><td>${r.diet||'—'}</td><td style="font-size:0.78rem;color:var(--muted);font-style:italic;">${r.msg||''}</td></tr>`).join('');
+
+  document.getElementById('pending-list').innerHTML=pending.length===0
+    ?'<p style="font-size:0.82rem;color:#2d6a4f;font-style:italic;">✓ Alle gaste het geantwoord!</p>'
+    :pending.map(g=>`<div style="padding:0.4rem 0;font-size:0.88rem;color:var(--muted);border-bottom:1px solid var(--cream2);">${g.name}${g.plus==='yes'?' <span style="font-size:0.7rem;color:#A8782A">(+metgesel)</span>':''}</div>`).join('');
+}
+
+// ── SCROLL REVEAL ──
+(function(){
+  // Add reveal class to key elements across all sections
+  const targets = [
+    // headings and body text per section
+    '.s2-script','.s2-venue','.s2-body',
+    '.s3-script','.s3-body','.s3-sig',
+    '.s4-title','.s4-sub','.s4-icons',
+    '.s5-title','.s5-body','.s5-deadline',
+    '.s6-title','.s6-block',
+    '.s8-gifts-title','.s8-gifts-box',
+    '.sdress-heading','.sdress-sub','.sdress-top',
+    '.sdress-photos',
+    '.s9-body','.s9-sig',
+    '.pstrip-slot',
+    // photo frame
+    '.s2-photo-frame',
+    // schedule items
+    '.s4-item',
+    // sign-off
+    '.s3-script',
+  ];
+  targets.forEach(sel=>{
+    document.querySelectorAll(sel).forEach((el,i)=>{
+      if(!el.classList.contains('reveal')){
+        el.classList.add('reveal');
+        // stagger children with small delay based on index within parent
+        if(i%4===1) el.classList.add('reveal-delay-1');
+        if(i%4===2) el.classList.add('reveal-delay-2');
+        if(i%4===3) el.classList.add('reveal-delay-3');
+      }
+    });
+  });
+
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+      } else {
+        // fade out when scrolled away
+        e.target.classList.remove('visible');
+      }
+    });
+  },{
+    threshold: 0.12,
+    rootMargin: '0px 0px -60px 0px'
+  });
+
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+})();
+</script>
+</body>
+</html>
